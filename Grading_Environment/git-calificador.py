@@ -51,16 +51,20 @@ def actualizarGits(trabajos, pull):
 def calificarTalleresUsuario(usuario, valores):
     """Califica los talleres a un usuario"""
     curso, grupo, codigo, usuarioPareja, nombre = valores
-    grupo = grupo[1:] #quitar al grupo un cero inicial
+    #grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = [0]*numTalleres
-    folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo 
-    folder = folderGitHub+"/talleres"
-    for i in range(1,numTalleres+1):
-            archivos = []
-            for extension in [".java", ".cpp", ".h", ".c", ".py", ".rb", ".pdf", ".doc"]:
-                    archivos += findFiles("*"+extension,folder+"/taller%02d/" % (i,))            
-            if len(archivos) > 0:
-                    respuestas[i-1] = int(1)                   
+    gr = ["01", "02", "03"]
+    for grupo in gr:
+        folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo 
+        folder = folderGitHub+"/talleres"
+        for i in range(1,numTalleres+1):
+                archivos = []
+                for extension in [".java", ".cpp", ".h", ".c", ".py", ".rb", ".pdf", ".doc"]:
+                        archivos += findFiles("*"+extension,folder+"/taller%02d/" % (i,))            
+                if len(archivos) > 0:
+                        respuestas[i-1] = int(1)
+        if(respuestas[numTalleres-1] == 1):
+            return respuestas                   
     return respuestas
        
 def calificarTalleres(trabajos, usuarios):
