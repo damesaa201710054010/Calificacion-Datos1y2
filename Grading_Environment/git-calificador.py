@@ -63,7 +63,7 @@ def calificarTalleresUsuario(usuario, valores):
                         archivos += findFiles("*"+extension,folder+"/taller%02d/" % (i,))            
                 if len(archivos) > 0:
                         respuestas[i-1] = int(1)
-        if(respuestas[numTalleres-1] == 1):
+        if 1 in respuestas: #me saca ceros si no hizo el ultimo taller, verificar y cambiar
             return respuestas                   
     return respuestas
        

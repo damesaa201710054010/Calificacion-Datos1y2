@@ -28,7 +28,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # If you need to add more sheets or change the current ones, do it here.
 SPREADSHEETS_ID_LIST = {
                         "ED1": {
-                                "01": "1Z_lGfpMaShIm1aJ4EVmeyHUOjiDNcqBwwRXvEFhrx9U",  # Cambiar
+                                "01": "1MhkqEetlJw7Rfg0P_oZC814drMD_dCI0k7M31mMk7F4",  # Cambiar
                                 "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
                                 "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA"   # Cambiar
                                },
