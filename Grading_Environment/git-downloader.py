@@ -43,11 +43,10 @@ def processCSV(lineaInicialParaElSemestre):
 def download(usuarios):
         """Se descargan los repositorios de los usuarios y se guarda un archivo de quienes tuvieron problemas"""
         archivo = open("problematicos.csv", 'w')
-        #usuariosConRepositorio = dict()
         for elUsuario, valores in usuarios.iteritems():
-                curso, grupo, codigo, usuarioPareja, nombre = valores 
+                curso, grupo, codigo, usuarioPareja, nombre = valores
                 grupo = grupo[1:] # Se le quita el cero inicial al grupo
-                for usuario in [elUsuario]:# usuarioPareja]: # Se procesa tanto para el usuario como para su pareja                      
+                for usuario in [elUsuario, usuarioPareja]: # Se procesa tanto para el usuario como para su pareja                      
                         if " " in usuario or "https" in usuario or "@" in usuario or "/" in usuario or usuario == "": #No puede ser vacío ni un URL ni un EMAIL
                                 archivo.write( "Problemas con: ," + curso + "," + grupo +"," + nombre + "\n")
                         else:                                
@@ -58,18 +57,12 @@ def download(usuarios):
                                 os.chdir(nuevoFolder) # Nos paramos en la carpeta del usuario
                                 if not os.path.exists(nuevoFolder+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo):
                                         system("git clone https://github.com/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo)
-                                        
                                 if len(os.listdir("./")) == 0: #Si no hay archivos ni carpetas
                                         archivo.write ("No tiene repositorio: ," + curso + "," + grupo +"," + usuario + "\n")
-                                #else:
-                                #        usuariosConRepositorio[usuario] = (curso, grupo, codigo, usuarioPareja, nombre)
                                 os.chdir(currentPath)
         archivo.close()
-        #archivoUsuarios = open("usuariosYRepos.dat", "w")
-        #archivoUsuarios.write(str(usuariosConRepositorio))
-        #archivoUsuarios.close()
                                                                    
-# initialize()
+#initialize()
 usuarios = processCSV(lineaInicialParaElSemestre)
 download(usuarios)
 

@@ -30,30 +30,41 @@ SPREADSHEETS_ID_LIST = {
                         "ED1": {
                                 "01": "1MhkqEetlJw7Rfg0P_oZC814drMD_dCI0k7M31mMk7F4",  # Cambiar
                                 "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
-                                "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA"   # Cambiar
+                                "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA",   # Cambiar
                                },
-                        "ED2": {}
+                        "ED2": {} #No hay otro grupo por el momento
                        }
 
 # Each array position represents the columnn range corresponding to each activity number
 # e.g. activity 1 corresponds to column C of the sheet
 SPREADSHEET_RANGES = [None, "C4:C", "D4:D", "E4:E", "F4:F", "G4:G", "H4:H", "I4:I", "J4:J", "K4:K", "L4:L", "M4:M", "N4:N"]
+SPREADSHEET_RANGES_Project = [None, "E4:E", "F4:F"]
+
 
 def main(argv):
 
     if len(argv) < 4:
         bad_usage()
-    
+    p=False
     course = argv[1].upper()
     group = argv[2]
-    activity_number = int(argv[3])
-    
+    activity_number = argv[3]
+    if activity_number == "p01" or activity_number == "p02":
+        activity_number = argv[3]
+        p=True
+    else:
+        activity_number = int(argv[3])
+ 
     if course != "ED1" and course != "ED2":
         bad_usage()
     elif group != "01" and group != "02" and group != "03":
         bad_usage()
-    elif activity_number < 1 or activity_number > 12:
-        bad_usage()
+    '''elif p==True:
+        if activity_number != "p01" or activity_number != "p02":
+            bad_usage() 
+    elif p==False:
+        if activity_number < 1 or activity_number > 12:
+            bad_usage()'''
     
     creds = None
     creds = verify_credentials(creds)
@@ -66,9 +77,14 @@ def main(argv):
     sheet_range = choose_range(activity_number)
     
     # Get the grades and pre-process it
-    students = get_students_from_csv(course, group, "talleres.csv")
+    if activity_number == "p01" or activity_number == "p02":
+        students = get_students_from_csv(course, group, "Proyecto/proyecto-1.csv")
+    else:
+        students = get_students_from_csv(course, group, "talleres.csv")
+
+    
     grades = get_grades(students, activity_number)
-    ids = get_ids_from_sheet(sheet, sheet_id)
+    ids = get_ids_from_sheet(sheet, sheet_id, p)
     sorted_grades = sort_grades(grades, ids)
 
     # Values to be added to the google sheet
@@ -93,16 +109,24 @@ def get_students_from_csv(course, group, file_name):
     with open(file_name, newline='') as csv_file:
         reader = csv.reader(csv_file)
         students = [row for row in reader if row[0] == course and row[1] == group]
-    
     return students
     
 def get_grades(students, activity_number):
     """
     Gets each student's grade for the activity that you are evaluating.
     """
+    if activity_number == "p01":
+        i = 2
+        activity_number = 1
+    elif activity_number == "p02":
+        activity_number = 2
+        i = 2
+    else:
+        i=2
+
     grades = []
     for student in students:
-        entry = (student[2], float(student[activity_number+5])) # Tuple of student ID and grade
+        entry = (student[i], float(student[activity_number+5])) # Tuple of student ID and grade
         grades.append(entry)
 
     return grades
@@ -117,15 +141,23 @@ def choose_range(activity_number):
     """
     Chooses a range depending on the specified activity.
     """
+    if activity_number == "p01":
+        return f"Proyecto!{SPREADSHEET_RANGES_Project[1]}"
+    elif activity_number == "p02":
+        return f"Proyecto!{SPREADSHEET_RANGES_Project[2]}"
+
     # For now, this means that it only works with one type of activity.
     return f"Talleres en Sala!{SPREADSHEET_RANGES[activity_number]}"
 
-def get_ids_from_sheet(sheet, sheet_id):
+def get_ids_from_sheet(sheet, sheet_id, p):
     """
     Get the student ids from a sheet.
     """
     # For now, this means that it only works with one type of activity.
-    result = sheet.values().get(spreadsheetId=sheet_id, range="Talleres en Sala!A4:A41").execute() 
+    if p == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Proyecto!C4:C41").execute()
+    else:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Talleres en Sala!A4:A41").execute() 
     values = result.get("values", [])
 
     ids = []

@@ -6,8 +6,9 @@ import sys
 import fnmatch
 import numpy
 
-#sudo apt-get install calibre
+#sudo apt-get install calibre checkstyle
 #Calibre includes ebook-convert tool
+#Checkstyle verifica si puso comentarios
 
 
 def findFiles(pattern, path):
@@ -21,7 +22,7 @@ def findFiles(pattern, path):
 
 def encontrarNombrePareja(usuarios, usuarioPareja):
     """Encuentra el nombre de la pareja"""
-    if usuarios.has_key(usuarioPareja):
+    if usuarioPareja in usuarios:
         nombrePareja = usuarios[usuarioPareja][4]
     else:
         nombrePareja = usuarioPareja
@@ -34,12 +35,12 @@ def actualizarGits(trabajos, pull):
     usuarios = eval(archivo.read())
     archivo.close()
     if pull == True:
-        for elUsuario, valores in usuarios.iteritems():
+        for elUsuario, valores in usuarios.items():
                     curso, grupo, codigo, usuarioPareja, nombre = valores
                     grupo = grupo[1:] #quitar al grupo un cero inicial
                     for usuario in [elUsuario, usuarioPareja]:
                         folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo
-                        print folderGitHub
+                        print (folderGitHub)
                         if os.path.exists(folderGitHub):
                                 currentPath = os.getcwd()
                                 os.chdir(folderGitHub)
@@ -51,27 +52,23 @@ def actualizarGits(trabajos, pull):
 def calificarTalleresUsuario(usuario, valores):
     """Califica los talleres a un usuario"""
     curso, grupo, codigo, usuarioPareja, nombre = valores
-    #grupo = grupo[1:] #quitar al grupo un cero inicial
+    grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = [0]*numTalleres
-    gr = ["01", "02", "03"]
-    for grupo in gr:
-        folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo 
-        folder = folderGitHub+"/talleres"
-        for i in range(1,numTalleres+1):
-                archivos = []
-                for extension in [".java", ".cpp", ".h", ".c", ".py", ".rb", ".pdf", ".doc"]:
-                        archivos += findFiles("*"+extension,folder+"/taller%02d/" % (i,))            
-                if len(archivos) > 0:
-                        respuestas[i-1] = int(1)
-        if 1 in respuestas: #me saca ceros si no hizo el ultimo taller, verificar y cambiar
-            return respuestas                   
+    folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo 
+    folder = folderGitHub+"/talleres"
+    for i in range(1,numTalleres+1):
+            archivos = []
+            for extension in [".java", ".cpp", ".h", ".c", ".py", ".rb", ".pdf", ".doc"]:
+                    archivos += findFiles("*"+extension,folder+"/taller%02d/" % (i,))            
+            if len(archivos) > 0:
+                    respuestas[i-1] = 1                   
     return respuestas
        
 def calificarTalleres(trabajos, usuarios):
         """Califica los talleres a todos los usuarios"""
         archivo = open("talleres.csv", "w")        
         archivo.write("Curso,Grupo,Codigo,Nombre,Pareja,Usuario,"+ ','.join("Taller"+str(i) for i in range(1,numTalleres+1)) + "\n" )
-        for usuario, valores in usuarios.iteritems():
+        for usuario, valores in usuarios.items():
             curso, grupo, codigo, usuarioPareja, nombre = valores
             grupo = grupo[1:] #quitar al grupo un cero inicial
             respuestas = calificarTalleresUsuario(usuario, valores)
@@ -82,9 +79,8 @@ def calificarTalleres(trabajos, usuarios):
             archivo.write(curso+","+grupo+","+codigo+","+nombre+","+nombrePareja+","+usuario+','+','.join(str(i) for i in respuestas)+"\n")
         archivo.close()
 
-
 def calificarDoc(archivos):
-        #Califica la doc HTML con un valor 1000/errores
+        """Califica la doc HTML con un valor 1000/errores"""
         errores = 0
         for archivo in archivos:                
                 os.system("checkstyle -c javadoc.xml "+archivo+" > temp.txt")
@@ -92,7 +88,7 @@ def calificarDoc(archivos):
                 texto = elArchivo.readlines()
                 if not "Must specify files to process" in texto[-1]:
                     if not texto[-1].strip("\n") == "Audit done." and not "found 0" in texto[-1]:
-                        print texto[-1]
+                        print (texto[-1])
                         errores += int(texto[-1].split(" ")[3])
                 elArchivo.close()
         if errores == 0:
@@ -101,7 +97,7 @@ def calificarDoc(archivos):
                 return 1000.0/(errores/len(archivos))
         
 def calificarPDF(nombreArchivo):
-        #Califica los puntos opcionales 5, 6 y 7 de un laboratorio
+        """Califica los puntos opcionales 5, 6 y 7 de un laboratorio"""
         os.system("ebook-convert "+nombreArchivo.replace(" ","\\ ")+" "+"tempPDF.txt")
         archivo = open("tempPDF.txt", 'r')
         texto = archivo.read()
@@ -116,7 +112,7 @@ def calificarPDF(nombreArchivo):
         return punto5, punto6, punto7
 
 def obtenerArchivosDeUnaCarpetaProyecto(folder,carpeta):
-    #Obtiene los nombres de archivos disponibles en una carpeta Lab
+    """Obtiene los nombres de archivos disponibles en una carpeta Lab"""
     pdfs = findFiles("*.pdf",folder+"/"+carpeta)
     docs = findFiles("*.doc",folder+"/"+carpeta)
     docxs = findFiles("*.docx",folder+"/"+carpeta)
@@ -126,7 +122,7 @@ def obtenerArchivosDeUnaCarpetaProyecto(folder,carpeta):
     return todos
 
 def obtenerArchivosDeUnaCarpetaLab(folder,i,carpeta):
-    #Obtiene los nombres de archivos disponibles en una carpeta Lab
+    """Obtiene los nombres de archivos disponibles en una carpeta Lab"""
     pdfs = findFiles("*.pdf",folder+"/lab0"+str(i)+"/"+carpeta)
     docs = findFiles("*.doc",folder+"/lab0"+str(i)+"/"+carpeta)
     docxs = findFiles("*.docx",folder+"/lab0"+str(i)+"/"+carpeta)
@@ -136,14 +132,14 @@ def obtenerArchivosDeUnaCarpetaLab(folder,i,carpeta):
     return todos
 
 def copiarInformeDeLab(i, folder, carpeta, semestre, curso, grupo, nombre):
-    #Copia todos los archivos tipo informe de un laboratorio a la carpeta correspondiente
+    """Copia todos los archivos tipo informe de un laboratorio a la carpeta correspondiente"""
     todos = obtenerArchivosDeUnaCarpetaLab(folder,i,carpeta)
     for index,archivo in enumerate(todos):
         if "archivo.txt" not in archivo:            
             os.system("cp "+archivo.replace(" ","\\ ").replace("(","\(").replace(")","\)")+" "+"Labs/Informes-"+semestre+"/"+curso+"/0"+grupo+"/Lab"+str(i)+"/"+nombre.replace(" ","-")+str(index)+"."+archivo.split(".")[-1])
 
 def copiarInformeDeProyecto(folder, carpeta, semestre, curso, grupo, entrega, nombre):
-    #Copia todos los archivos tipo informe de un proyecto a la carpeta correspondiente
+    """Copia todos los archivos tipo informe de un proyecto a la carpeta correspondiente"""
     todos = obtenerArchivosDeUnaCarpetaProyecto(folder,carpeta)
     for index,archivo in enumerate(todos):
         if "archivo.txt" not in archivo:
@@ -151,7 +147,7 @@ def copiarInformeDeProyecto(folder, carpeta, semestre, curso, grupo, entrega, no
 
 
 def calificarLaboratoriosUsuario(usuario, valores, carpetas,semestre):
-    #Califica los laboratorios a un usuario
+    """Califica los laboratorios a un usuario"""
     curso, grupo, codigo, usuarioPareja, nombre = valores
     grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = numpy.zeros(shape=(5,6))
@@ -194,14 +190,14 @@ def calificarLaboratoriosUsuario(usuario, valores, carpetas,semestre):
 
        
 def calificarLabs(trabajos, usuarios, semestre):
-        #Califica los laboratorio a los usuarios
+        """Califica los laboratorio a los usuarios"""
         archivos = [0]*5
         for i in range(0,5):
                 archivos[i] = open("Labs/lab"+str(i+1)+".csv", "w")
                 archivos[i].write("Laboratorio"+str(i+1)+",,,,,,,,,,,,\n" )
                 archivos[i].write("Curso,Grupo,Codigo,Nombre,Pareja,Juez,Codigo,Informe, Lectura, Trabajo Equipo, English\n")#Juez,Codigo,Doc,Preguntas,Complejidad,Simulacro,Lectura,Equipo\n" )        
         carpetas = ['ejercicioEnLinea/','codigo/','informe/']
-        for usuario, valores in usuarios.iteritems():
+        for usuario, valores in usuarios.items():
             curso, grupo, codigo, usuarioPareja, nombre = valores
             grupo = grupo[1:] #quitar al grupo un cero inicial
             respuestas = calificarLaboratoriosUsuario(usuario, valores, carpetas, semestre)
@@ -217,7 +213,7 @@ def calificarLabs(trabajos, usuarios, semestre):
               
 
 def calificarProyectoUsuario(usuario, valores, criterios, entrega, semestre):
-    #Califica una Entrega de Proyecto a un usuario
+    """Califica una Entrega de Proyecto a un usuario"""
     curso, grupo, codigo, usuarioPareja, nombre = valores
     grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = [0]
@@ -239,11 +235,11 @@ def calificarProyectoUsuario(usuario, valores, criterios, entrega, semestre):
     return respuestas
 
 def calificarProyectos(trabajos, entrega, usuarios, semestre):
-        #Califica los proyectos de todos los usuarios para una entrega determinada y un semestre determinado
+        """Califica los proyectos de todos los usuarios para una entrega determinada y un semestre determinado"""
         archivo = open("Proyecto/proyecto-"+str(entrega)+".csv", "w")        
         criterios = ['codigo/','informe/entrega'+str(entrega)+'/', 'informe/']
         archivo.write("Curso,Grupo,Codigo,Nombre,Pareja,Codigo,Informe, Informe fuera de carpeta\n")
-        for usuario, valores in usuarios.iteritems():
+        for usuario, valores in usuarios.items():
             curso, grupo, codigo, usuarioPareja, nombre = valores
             grupo = grupo[1:] #quitar al grupo un cero inicial
             respuestas = calificarProyectoUsuario(usuario, valores, criterios, entrega, semestre)
@@ -263,8 +259,8 @@ semestre = "2020-2" # Esto se cambia cada semestre, antes decia 2019-1 ahora dic
 path = os.getcwd()
 trabajos = path+"/Trabajos"+semestre+"/"
 usuarios = actualizarGits(trabajos, True) #False es no haga pull
-#calificarProyectos(trabajos,1, usuarios, semestre )
-calificarTalleres(trabajos, usuarios)
+calificarProyectos(trabajos,1, usuarios, semestre )
+#calificarTalleres(trabajos, usuarios)
 #calificarLabs(trabajos, usuarios, semestre)
 
 
