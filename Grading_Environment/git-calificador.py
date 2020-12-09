@@ -82,7 +82,7 @@ def calificarTalleres(trabajos, usuarios):
 def calificarDoc(archivos):
         """Califica la doc HTML con un valor 1000/errores"""
         errores = 0
-        for archivo in archivos:                
+        '''for archivo in archivos:                
                 os.system("checkstyle -c javadoc.xml "+archivo+" > temp.txt")
                 elArchivo = open("temp.txt", "r")
                 texto = elArchivo.readlines()
@@ -90,25 +90,25 @@ def calificarDoc(archivos):
                     if not texto[-1].strip("\n") == "Audit done." and not "found 0" in texto[-1]:
                         print (texto[-1])
                         errores += int(texto[-1].split(" ")[3])
-                elArchivo.close()
+                elArchivo.close()'''
         if errores == 0:
-                return 1000.0
+                return 1.0
         else:
                 return 1000.0/(errores/len(archivos))
         
 def calificarPDF(nombreArchivo):
         """Califica los puntos opcionales 5, 6 y 7 de un laboratorio"""
-        os.system("ebook-convert "+nombreArchivo.replace(" ","\\ ")+" "+"tempPDF.txt")
-        archivo = open("tempPDF.txt", 'r')
-        texto = archivo.read()
-        archivo.close()
+        #os.system("ebook-convert "+nombreArchivo.replace(" ","\\ ")+" "+"tempPDF.txt")
+        #archivo = open("tempPDF.txt", 'r')
+        #texto = archivo.read()
+        #archivo.close()
         punto5, punto6, punto7 = 0,0,0 # Lectura, equipo, Inglés
-        if "Lectura recomendada" in texto or "Recommended reading" in texto:            
-            punto5 = 1
-        if "Trabajo en Equipo y Progreso Gradual" in texto or "Team work and gradual progress" in texto:    
-            punto6 = 1
-        if "DEPARTMENT OF INFORMATICS AND SYSTEMS" in texto or "SCHOOL OF ENGINEERING" in texto :
-            punto7 = 1
+        #if "Lectura recomendada" in texto or "Recommended reading" in texto:            
+        punto5 = 0
+        #if "Trabajo en Equipo y Progreso Gradual" in texto or "Team work and gradual progress" in texto:    
+        punto6 = 1
+        #if "DEPARTMENT OF INFORMATICS AND SYSTEMS" in texto or "SCHOOL OF ENGINEERING" in texto :
+        punto7 = 0
         return punto5, punto6, punto7
 
 def obtenerArchivosDeUnaCarpetaProyecto(folder,carpeta):
@@ -154,7 +154,7 @@ def calificarLaboratoriosUsuario(usuario, valores, carpetas,semestre):
     losArchivos = [[]]*5
     folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo
     folder = folderGitHub+"/laboratorios"             
-    for i in range(1,5+1):
+    for i in range(1,5+1):  
             losArchivos[i-1] = [0]*6
             for idx, carpeta in enumerate(carpetas):                                                                 
                     extensiones = [  [".java", ".cpp", ".h", ".c", ".py", ".rb", ".txt"], [".java", ".cpp", ".h", ".c", ".py", ".rb", ".txt"], [".pdf", ".doc", ".docx"]]
@@ -174,7 +174,7 @@ def calificarLaboratoriosUsuario(usuario, valores, carpetas,semestre):
                                 if len(archivosJava) > 0:  #Si es código java, un puntaje según su JavaDoc                                          
                                             respuestas[i-1][idx] = calificarDoc(archivosJava)                                                        
                             if carpeta == "informe/": #Califica los puntos extras del informe pdf
-                                            copiarInformeDeLab(i, folder, carpeta, semestre, curso, grupo, nombre)
+                                            #copiarInformeDeLab(i, folder, carpeta, semestre, curso, grupo, nombre)
                                             puntos5, puntos6, puntos7 = 0, 0, 0
                                             for archivo in archivosEstudiante:
                                                 puntos5a, puntos6a, puntos7a =  calificarPDF(archivo)
@@ -258,10 +258,10 @@ numTalleres = 13
 semestre = "2020-2" # Esto se cambia cada semestre, antes decia 2019-1 ahora dice 2019-2
 path = os.getcwd()
 trabajos = path+"/Trabajos"+semestre+"/"
-usuarios = actualizarGits(trabajos, True) #False es no haga pull
-calificarProyectos(trabajos,1, usuarios, semestre )
+usuarios = actualizarGits(trabajos, False) #False es no haga pull
+#calificarProyectos(trabajos,1, usuarios, semestre )
 #calificarTalleres(trabajos, usuarios)
-#calificarLabs(trabajos, usuarios, semestre)
+calificarLabs(trabajos, usuarios, semestre)
 
 
 

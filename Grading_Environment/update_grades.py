@@ -27,34 +27,39 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # If you need to add more sheets or change the current ones, do it here.
 SPREADSHEETS_ID_LIST = {
-                        "ED1": {
-                                "01": "1MhkqEetlJw7Rfg0P_oZC814drMD_dCI0k7M31mMk7F4",  # Cambiar
-                                "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
-                                "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA",   # Cambiar
-                               },
-                        "ED2": {} #No hay otro grupo por el momento
-                       }
+    "ED1": {
+        "01": "1MhkqEetlJw7Rfg0P_oZC814drMD_dCI0k7M31mMk7F4",  # Cambiar
+        "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
+        "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA",   # Cambiar
+    },
+    "ED2": {}  # No hay otro grupo por el momento
+}
 
 # Each array position represents the columnn range corresponding to each activity number
 # e.g. activity 1 corresponds to column C of the sheet
-SPREADSHEET_RANGES = [None, "C4:C", "D4:D", "E4:E", "F4:F", "G4:G", "H4:H", "I4:I", "J4:J", "K4:K", "L4:L", "M4:M", "N4:N"]
+SPREADSHEET_RANGES = [None, "C4:C", "D4:D", "E4:E", "F4:F",
+                      "G4:G", "H4:H", "I4:I", "J4:J", "K4:K", "L4:L", "M4:M", "N4:N"]
 SPREADSHEET_RANGES_Project = [None, "E4:E", "F4:F"]
+SPREADSHEET_RANGES_Labs = [None, "C4:C", "D4:D",
+                           "F4:F", "G4:G", "H4:H"]
 
 
 def main(argv):
 
     if len(argv) < 4:
         bad_usage()
-    p=False
+    p = False
     course = argv[1].upper()
     group = argv[2]
     activity_number = argv[3]
-    if activity_number == "p01" or activity_number == "p02":
+    if (activity_number == "p01" or activity_number == "p02" or
+    activity_number == "l1" or activity_number == "l2" or activity_number == "l3" or activity_number == "l4" or 
+    activity_number == "l5"):
         activity_number = argv[3]
-        p=True
+        p = True
     else:
         activity_number = int(argv[3])
- 
+
     if course != "ED1" and course != "ED2":
         bad_usage()
     elif group != "01" and group != "02" and group != "03":
@@ -65,7 +70,7 @@ def main(argv):
     elif p==False:
         if activity_number < 1 or activity_number > 12:
             bad_usage()'''
-    
+
     creds = None
     creds = verify_credentials(creds)
 
@@ -74,31 +79,148 @@ def main(argv):
     # Call the Sheets API and choose the correct sheet
     sheet = service.spreadsheets()
     sheet_id = choose_sheet(course, group)
-    sheet_range = choose_range(activity_number)
-    
+
     # Get the grades and pre-process it
     if activity_number == "p01" or activity_number == "p02":
-        students = get_students_from_csv(course, group, "Proyecto/proyecto-1.csv")
+        students = get_students_from_csv(
+            course, group, "Proyecto/proyecto-1.csv")
+    elif activity_number == 'l1':
+        students = get_students_from_csv(course, group, "Labs/lab1.csv")
+    elif activity_number == 'l2':
+        students = get_students_from_csv(course, group, "Labs/lab2.csv")
+    elif activity_number == 'l3':
+        students = get_students_from_csv(course, group, "Labs/lab3.csv")
+    elif activity_number == 'l4':
+        students = get_students_from_csv(course, group, "Labs/lab4.csv")
+    elif activity_number == 'l5':
+        students = get_students_from_csv(course, group, "Labs/lab5.csv")
     else:
         students = get_students_from_csv(course, group, "talleres.csv")
 
-    
-    grades = get_grades(students, activity_number)
-    ids = get_ids_from_sheet(sheet, sheet_id, p)
-    sorted_grades = sort_grades(grades, ids)
-
-    # Values to be added to the google sheet
-    values = [
-               sorted_grades    
-             ]
-    # Body of the request, according to the sheets v4 api
-    body = {
+    if activity_number == 'l1' or 'l2' or 'l3' or 'l4' or 'l5':
+        labsupdate(students, sheet_id, activity_number, sheet)
+    else:
+        grades = get_grades(students, activity_number)
+        ids = get_ids_from_sheet(sheet, sheet_id, p, False, False, False, False, False, activity_number)
+        sorted_grades = sort_grades(grades, ids)
+        sheet_range = choose_range(activity_number)
+        # Values to be added to the google sheet
+        values = [
+            sorted_grades
+        ]
+        # Body of the request, according to the sheets v4 api
+        body = {
             "majorDimension": "COLUMNS",
             "values": values
-           }
-    # Update the values on the sheet
-    result = sheet.values().update(spreadsheetId=sheet_id, range=sheet_range, valueInputOption="RAW", body=body).execute()
-    print(f"{result.get('updatedCells')} cells updated")
+        }
+        # Update the values on the sheet
+        result = sheet.values().update(spreadsheetId=sheet_id, range=sheet_range,
+                                       valueInputOption="RAW", body=body).execute()
+        print(f"{result.get('updatedCells')} cells updated")
+
+
+def labsupdate(students, sheet_id, activity_number, sheet):
+    """
+    Gets each student's grade for the activity that you are evaluating.
+    """
+    if activity_number == 'l1':
+        activity_number = 1
+    elif activity_number == 'l2':
+        activity_number = 2
+    elif activity_number == 'l3':
+        activity_number = 3
+    elif activity_number == 'l4':
+        activity_number = 4
+    elif activity_number == 'l5':
+        activity_number = 5
+    j = 2
+    for i in [1,2,3,4,5]:
+        grades = []
+        for student in students:
+            # Tuple of student ID and grade
+            entry = (student[j], float(student[activity_number+4]))
+            grades.append(entry)
+        if  i== 1:
+            ids = get_ids_from_sheet(sheet, sheet_id, False, True, False, False, False, False, activity_number)
+        elif i == 2:
+            ids = get_ids_from_sheet(sheet, sheet_id, False, False, True, False, False, False, activity_number)
+        elif i == 3:
+            ids = get_ids_from_sheet(sheet, sheet_id, False, False, False, True, False, False, activity_number)
+        elif i == 4:
+            ids = get_ids_from_sheet(sheet, sheet_id, False, False, False, False, True, False, activity_number)
+        elif i == 5:
+            ids = get_ids_from_sheet(sheet, sheet_id, False, False, False, False, False, True, activity_number)
+        sorted_grades = sort_grades(grades, ids)
+        sheet_range = getlabs(i, activity_number)
+
+        # Values to be added to the google sheet
+        values = [
+            sorted_grades
+        ]
+        # Body of the request, according to the sheets v4 api
+        body = {
+            "majorDimension": "COLUMNS",
+            "values": values
+        }
+
+        # Update the values on the sheet
+        result = sheet.values().update(spreadsheetId=sheet_id, range=sheet_range,
+                                        valueInputOption="RAW", body=body).execute()
+        print(f"{result.get('updatedCells')} cells updated")
+
+
+def getlabs(i, activity_number):
+    if i == 1 and activity_number == 1:
+        return f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[2]}"
+    elif i == 2 and activity_number ==1:
+        return f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[1]}"
+    elif i == 3 and activity_number == 1:
+        return  f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[3]}"
+    elif i == 4 and activity_number == 1:
+        return f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[4]}"
+    elif i== 5 and activity_number == 1:
+        return f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[5]}"
+    elif i == 1 and activity_number == 2:
+        return f"Laboratorio 2!{SPREADSHEET_RANGES_Labs[2]}"
+    elif i == 2 and activity_number == 2:
+        return f"Laboratorio 2!{SPREADSHEET_RANGES_Labs[1]}"
+    elif i == 3 and activity_number == 2:
+        return  f"Laboratorio 2!{SPREADSHEET_RANGES_Labs[3]}"
+    elif i == 4 and activity_number == 2:
+        return f"Laboratorio 2!{SPREADSHEET_RANGES_Labs[4]}"
+    elif i== 5 and activity_number == 2:
+        return f"Laboratorio 2!{SPREADSHEET_RANGES_Labs[5]}"
+    elif i == 1 and activity_number == 3:
+        return f"Laboratorio 3!{SPREADSHEET_RANGES_Labs[2]}"
+    elif i == 2 and activity_number == 3:
+        return f"Laboratorio 3!{SPREADSHEET_RANGES_Labs[1]}"
+    elif i == 3 and activity_number == 3:
+        return  f"Laboratorio 3!{SPREADSHEET_RANGES_Labs[3]}"
+    elif i == 4 and activity_number == 3:
+        return f"Laboratorio 3!{SPREADSHEET_RANGES_Labs[4]}"
+    elif i== 5 and activity_number == 3:
+        return f"Laboratorio 3!{SPREADSHEET_RANGES_Labs[5]}"
+    elif i == 1 and activity_number==4:
+        return f"Laboratorio 4!{SPREADSHEET_RANGES_Labs[2]}"
+    elif i == 2 and activity_number == 4:
+        return f"Laboratorio 4!{SPREADSHEET_RANGES_Labs[1]}"
+    elif i == 3 and activity_number == 4:
+        return  f"Laboratorio 4!{SPREADSHEET_RANGES_Labs[3]}"
+    elif i == 4 and activity_number == 4:
+        return f"Laboratorio 4!{SPREADSHEET_RANGES_Labs[4]}"
+    elif i== 5 and activity_number == 4:
+        return f"Laboratorio 4!{SPREADSHEET_RANGES_Labs[5]}"
+    elif i == 1 and activity_number == 5:
+        return f"Laboratorio 5!{SPREADSHEET_RANGES_Labs[2]}"
+    elif i == 2 and activity_number == 5:
+        return f"Laboratorio 5!{SPREADSHEET_RANGES_Labs[1]}"
+    elif i == 3 and activity_number == 5:
+        return  f"Laboratorio 5!{SPREADSHEET_RANGES_Labs[3]}"
+    elif i == 4 and activity_number == 5:
+        return f"Laboratorio 5!{SPREADSHEET_RANGES_Labs[4]}"
+    else:
+        return f"Laboratorio 5!{SPREADSHEET_RANGES_Labs[5]}"
+    
 
 
 def get_students_from_csv(course, group, file_name):
@@ -108,9 +230,11 @@ def get_students_from_csv(course, group, file_name):
     students = []
     with open(file_name, newline='') as csv_file:
         reader = csv.reader(csv_file)
-        students = [row for row in reader if row[0] == course and row[1] == group]
+        students = [row for row in reader if row[0]
+                    == course and row[1] == group]
     return students
-    
+
+
 def get_grades(students, activity_number):
     """
     Gets each student's grade for the activity that you are evaluating.
@@ -122,20 +246,23 @@ def get_grades(students, activity_number):
         activity_number = 2
         i = 2
     else:
-        i=2
+        i = 2
 
     grades = []
     for student in students:
-        entry = (student[i], float(student[activity_number+5])) # Tuple of student ID and grade
+        # Tuple of student ID and grade
+        entry = (student[i], float(student[activity_number+5]))
         grades.append(entry)
 
     return grades
+
 
 def choose_sheet(course, group):
     """
     Chooses a google sheet depending on the course and group.
     """
     return SPREADSHEETS_ID_LIST[course][group]
+
 
 def choose_range(activity_number):
     """
@@ -145,19 +272,38 @@ def choose_range(activity_number):
         return f"Proyecto!{SPREADSHEET_RANGES_Project[1]}"
     elif activity_number == "p02":
         return f"Proyecto!{SPREADSHEET_RANGES_Project[2]}"
+        
 
     # For now, this means that it only works with one type of activity.
     return f"Talleres en Sala!{SPREADSHEET_RANGES[activity_number]}"
 
-def get_ids_from_sheet(sheet, sheet_id, p):
+
+def get_ids_from_sheet(sheet, sheet_id, p, p1, p2, p3, p4, p5, activity_number):
     """
     Get the student ids from a sheet.
     """
     # For now, this means that it only works with one type of activity.
     if p == True:
-        result = sheet.values().get(spreadsheetId=sheet_id, range="Proyecto!C4:C41").execute()
+        result = sheet.values().get(spreadsheetId=sheet_id,
+                                    range="Proyecto!C4:C41").execute()
+    if p2 == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
+                                    " "+str(activity_number)+"!A4:A41").execute()
+    if p1 == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
+                                    " "+str(activity_number)+"!A4:A41").execute()
+    if p3 == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
+                                    " "+str(activity_number)+"!A4:A41").execute()
+    if p4 == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
+                                    " "+str(activity_number)+"!A4:A41").execute()
+    if p5 == True:
+        result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
+                                    " "+str(activity_number)+"!A4:A41").execute()
     else:
-        result = sheet.values().get(spreadsheetId=sheet_id, range="Talleres en Sala!A4:A41").execute() 
+        result = sheet.values().get(spreadsheetId=sheet_id,
+                                    range="Talleres en Sala!A4:A41").execute()
     values = result.get("values", [])
 
     ids = []
@@ -169,11 +315,12 @@ def get_ids_from_sheet(sheet, sheet_id, p):
 
     return ids
 
+
 def sort_grades(grades, ids):
     """
     Sort the grades so that they are in the same order in which the students ids appear in the google sheet.
     """
-    #TODO: Look for a way to optimize this process!!.
+    # TODO: Look for a way to optimize this process!!.
     sorted_grades = []
     for student_id in ids:
         found_id = False
@@ -185,9 +332,9 @@ def sort_grades(grades, ids):
                 break
         if not found_id:
             sorted_grades.append("NaN")
-        
 
     return sorted_grades
+
 
 def verify_credentials(creds):
     """
@@ -215,12 +362,14 @@ def verify_credentials(creds):
 
     return creds
 
+
 def bad_usage():
     """
     Prints a Usage message and exits with error code 1.
     """
     print("Usage: python3 update_grades.py {ed1|ed2} {01|02|03} {1|2|..|12}")
     exit(1)
+
 
 if __name__ == '__main__':
     main(sys.argv)
