@@ -9,6 +9,16 @@ import numpy
 #sudo apt-get install calibre checkstyle
 #Calibre includes ebook-convert tool
 #Checkstyle verifica si puso comentarios
+#Constantes
+numTalleres = 13
+
+#Main
+semestre = "" # Esto se cambia cada semestre, antes decia 2019-1 ahora dice 2019-2
+path = os.getcwd()
+trabajos = path+"/Trabajos"+semestre+"/"
+#calificarProyectos(trabajos,1, usuarios, semestre )
+#calificarTalleres(trabajos, usuarios)
+#calificarLabs(trabajos, usuarios, semestre)
 
 
 def findFiles(pattern, path):
@@ -36,9 +46,9 @@ def actualizarGits(trabajos, pull):
     archivo.close()
     if pull == True:
         for elUsuario, valores in usuarios.items():
-                    curso, grupo, codigo, usuarioPareja, nombre = valores
+                    curso, grupo, codigo, codigoPareja, nombre = valores
                     grupo = grupo[1:] #quitar al grupo un cero inicial
-                    for usuario in [elUsuario, usuarioPareja]:
+                    for usuario in [elUsuario]:
                         folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo
                         print (folderGitHub)
                         if os.path.exists(folderGitHub):
@@ -51,7 +61,7 @@ def actualizarGits(trabajos, pull):
 
 def calificarTalleresUsuario(usuario, valores):
     """Califica los talleres a un usuario"""
-    curso, grupo, codigo, usuarioPareja, nombre = valores
+    curso, grupo, codigo, codigoPareja, nombre = valores
     grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = [0]*numTalleres
     folderGitHub = trabajos+curso+"/0"+grupo+"/"+usuario+"/"+"ST024"+("5" if curso == "ED1" else "7")+"-0"+grupo 
@@ -67,16 +77,14 @@ def calificarTalleresUsuario(usuario, valores):
 def calificarTalleres(trabajos, usuarios):
         """Califica los talleres a todos los usuarios"""
         archivo = open("talleres.csv", "w")        
-        archivo.write("Curso,Grupo,Codigo,Nombre,Pareja,Usuario,"+ ','.join("Taller"+str(i) for i in range(1,numTalleres+1)) + "\n" )
+        archivo.write("Curso,Grupo,Codigo,Nombre,CodigoPareja,Usuario,"+ ','.join("Taller"+str(i) for i in range(1,numTalleres+1)) + "\n" )
         for usuario, valores in usuarios.items():
-            curso, grupo, codigo, usuarioPareja, nombre = valores
+            curso, grupo, codigo, codigoPareja, nombre = valores
             grupo = grupo[1:] #quitar al grupo un cero inicial
-            respuestas = calificarTalleresUsuario(usuario, valores)
-            respuestasPareja = calificarTalleresUsuario(usuarioPareja, valores)
-            nombrePareja = encontrarNombrePareja(usuarios, usuarioPareja)            
+            respuestas = calificarTalleresUsuario(usuario, valores)          
             for i in range(len(respuestas)):
-                respuestas[i] = respuestas[i] or respuestasPareja[i]   #Nota suya o de su pareja
-            archivo.write(curso+","+grupo+","+codigo+","+nombre+","+nombrePareja+","+usuario+','+','.join(str(i) for i in respuestas)+"\n")
+                respuestas[i] = respuestas[i]  #Nota suya o de su pareja
+            archivo.write(curso+","+grupo+","+codigo+","+nombre+","+codigoPareja+","+usuario+','+','.join(str(i) for i in respuestas)+"\n")
         archivo.close()
 
 def calificarDoc(archivos):
@@ -251,19 +259,6 @@ def calificarProyectos(trabajos, entrega, usuarios, semestre):
         archivo.close()
 
 
-#Constantes
-numTalleres = 13
-
-#Main
-semestre = "2020-2" # Esto se cambia cada semestre, antes decia 2019-1 ahora dice 2019-2
-path = os.getcwd()
-trabajos = path+"/Trabajos"+semestre+"/"
-usuarios = actualizarGits(trabajos, False) #False es no haga pull
-#calificarProyectos(trabajos,1, usuarios, semestre )
-#calificarTalleres(trabajos, usuarios)
-calificarLabs(trabajos, usuarios, semestre)
-
-
-
+#usuarios = actualizarGits(trabajos, False) #False es no haga pull
 #Para unir pdfs, por ejemplo, todos los informes de labs o de proyecto:
 # pdfunite *.pdf all.pdf
