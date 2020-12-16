@@ -28,7 +28,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # If you need to add more sheets or change the current ones, do it here.
 SPREADSHEETS_ID_LIST = {
     "ED1": {
-        "01": "1MhkqEetlJw7Rfg0P_oZC814drMD_dCI0k7M31mMk7F4",  # Cambiar
+        "33": "1Z_lGfpMaShIm1aJ4EVmeyHUOjiDNcqBwwRXvEFhrx9U",  # Cambiar
         "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
         "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA",   # Cambiar
     },
@@ -59,17 +59,18 @@ def main(argv):
         p = True
     else:
         activity_number = int(argv[3])
+        p=False
 
     if course != "ED1" and course != "ED2":
         bad_usage()
-    elif group != "01" and group != "02" and group != "03":
+    elif group != "33" and group != "02" and group != "03":
         bad_usage()
-    '''elif p==True:
+    elif p==True:
         if activity_number != "p01" or activity_number != "p02":
             bad_usage() 
     elif p==False:
         if activity_number < 1 or activity_number > 12:
-            bad_usage()'''
+            bad_usage()
 
     creds = None
     creds = verify_credentials(creds)
@@ -97,9 +98,10 @@ def main(argv):
     else:
         students = get_students_from_csv(course, group, "talleres.csv")
 
-    if activity_number == 'l1' or 'l2' or 'l3' or 'l4' or 'l5':
+    if activity_number == 'l1' or activity_number ==  'l2' or activity_number ==  'l3' or activity_number ==  'l4' or activity_number ==  'l5':
         labsupdate(students, sheet_id, activity_number, sheet)
     else:
+    
         grades = get_grades(students, activity_number)
         ids = get_ids_from_sheet(sheet, sheet_id, p, False, False, False, False, False, activity_number)
         sorted_grades = sort_grades(grades, ids)
@@ -134,6 +136,7 @@ def labsupdate(students, sheet_id, activity_number, sheet):
     elif activity_number == 'l5':
         activity_number = 5
     j = 2
+    
     for i in [1,2,3,4,5]:
         grades = []
         for student in students:
@@ -247,12 +250,14 @@ def get_grades(students, activity_number):
         i = 2
     else:
         i = 2
-
+    
     grades = []
     for student in students:
         # Tuple of student ID and grade
         entry = (student[i], float(student[activity_number+5]))
+        entry1 = (student[i+2], float(student[activity_number+5]))
         grades.append(entry)
+        grades.append(entry1)
 
     return grades
 
@@ -325,6 +330,7 @@ def sort_grades(grades, ids):
     for student_id in ids:
         found_id = False
         for entry in grades:
+          
             if entry[0] == student_id:
                 sorted_grades.append(entry[1])
                 found_id = True
