@@ -222,7 +222,7 @@ def calificarLabs(trabajos, usuarios, semestre):
 
 def calificarProyectoUsuario(usuario, valores, criterios, entrega, semestre):
     """Califica una Entrega de Proyecto a un usuario"""
-    curso, grupo, codigo, usuarioPareja, nombre = valores
+    curso, grupo, codigo, codigoPareja, nombre = valores
     grupo = grupo[1:] #quitar al grupo un cero inicial
     respuestas = [0]
     losArchivos = [[]]
@@ -246,16 +246,15 @@ def calificarProyectos(trabajos, entrega, usuarios, semestre):
         """Califica los proyectos de todos los usuarios para una entrega determinada y un semestre determinado"""
         archivo = open("Proyecto/proyecto-"+str(entrega)+".csv", "w")        
         criterios = ['codigo/','informe/entrega'+str(entrega)+'/', 'informe/']
-        archivo.write("Curso,Grupo,Codigo,Nombre,Pareja,Codigo,Informe, Informe fuera de carpeta\n")
+        archivo.write("Curso,Grupo,Codigo,Nombre,codigoPareja,Codigo(fuente),Informe, Informe fuera de carpeta\n")
         for usuario, valores in usuarios.items():
-            curso, grupo, codigo, usuarioPareja, nombre = valores
+            curso, grupo, codigo, codigoPareja, nombre = valores
             grupo = grupo[1:] #quitar al grupo un cero inicial
             respuestas = calificarProyectoUsuario(usuario, valores, criterios, entrega, semestre)
-            respuestasPareja = calificarProyectoUsuario(usuarioPareja, valores, criterios, entrega,semestre)
-            nombrePareja = encontrarNombrePareja(usuarios, usuarioPareja)                  
+            
             for idx in range(len(criterios)): 
-                    respuestas[idx] = respuestas[idx] or respuestasPareja[idx]# Funciona como el máximo
-            archivo.write(curso+","+grupo+","+codigo+","+nombre+","+nombrePareja+","+str(respuestas[0])+","+str(respuestas[1])+","+str(respuestas[2])+"\n")       
+                    respuestas[idx] = respuestas[idx]# Funciona como el máximo
+            archivo.write(curso+","+grupo+","+codigo+","+nombre+","+codigoPareja+","+str(respuestas[0])+","+str(respuestas[1])+","+str(respuestas[2])+"\n")       
         archivo.close()
 
 

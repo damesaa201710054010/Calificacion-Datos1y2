@@ -28,7 +28,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # If you need to add more sheets or change the current ones, do it here.
 SPREADSHEETS_ID_LIST = {
     "ED1": {
-        "33": "1Z_lGfpMaShIm1aJ4EVmeyHUOjiDNcqBwwRXvEFhrx9U",  # Cambiar
+        "33": "1IysGtSTbxJQtDelem-NCo1zDBSAQvl83OVgHr9dJtP0",  # Cambiar
         "32": "",
         "01": "",
         "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
@@ -64,6 +64,7 @@ def main(argv):
     activity_number == "l1" or activity_number == "l2" or activity_number == "l3" or activity_number == "l4" or 
     activity_number == "l5"):
         activity_number = argv[3]
+        #print("I'm here")
         p = True
     else:
         activity_number = int(argv[3])
@@ -71,9 +72,6 @@ def main(argv):
 
     if course != "ED1" and course != "ED2":
         bad_usage()
-    elif p==True:
-        if activity_number != "p01" or activity_number != "p02":
-            bad_usage() 
     elif p==False:
         if activity_number < 1 or activity_number > 13:
             bad_usage()
@@ -88,9 +86,12 @@ def main(argv):
     sheet_id = choose_sheet(course, group)
 
     # Get the grades and pre-process it 
-    if activity_number == "p01" or activity_number == "p02":  #es proyecto?
+    if activity_number == "p01":   #es proyecto?
         students = get_students_from_csv(
             course, group, "Proyecto/proyecto-1.csv")
+    elif activity_number == "p02":
+        students = get_students_from_csv(
+            course, group, "Proyecto/proyecto-2.csv")
     elif activity_number == 'l1':
         students = get_students_from_csv(course, group, "Labs/lab1.csv")  #lab1?
     elif activity_number == 'l2':
@@ -249,23 +250,27 @@ def get_grades(students, activity_number):
     """
     Gets each student's grade for the activity that you are evaluating.
     """
+    ind = False
     if activity_number == "p01":
         i = 2
         activity_number = 1
+        ind = True
     elif activity_number == "p02":
         activity_number = 2
         i = 2
+        ind  = True
     else:
         i = 2
     
     grades = []
+    
     for student in students:
         # Tuple of student ID and grade
         entry = (student[i], float(student[activity_number+5]))
         entry1 = (student[i+2], float(student[activity_number+5]))
         grades.append(entry)
         grades.append(entry1)
-
+    
     return grades
 
 
@@ -296,6 +301,7 @@ def get_ids_from_sheet(sheet, sheet_id, p, p1, p2, p3, p4, p5, activity_number):
     """
     # For now, this means that it only works with one type of activity.
     if p == True:
+        
         result = sheet.values().get(spreadsheetId=sheet_id,
                                     range="Proyecto!C4:C41").execute()
     if p2 == True:
@@ -313,9 +319,10 @@ def get_ids_from_sheet(sheet, sheet_id, p, p1, p2, p3, p4, p5, activity_number):
     if p5 == True:
         result = sheet.values().get(spreadsheetId=sheet_id, range="Laboratorio" +
                                     " "+str(activity_number)+"!A4:A41").execute()
-    else:
+    if p == False:
         result = sheet.values().get(spreadsheetId=sheet_id,
                                     range="Talleres en Sala!A4:A41").execute()
+    
     values = result.get("values", [])
 
     ids = []
