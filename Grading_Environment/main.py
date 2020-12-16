@@ -8,12 +8,7 @@ curso=""
 numGrup = 0
 grupos = []
 
-
-
 respuesta = ""
-print("Descargar repositorios (si|no): ")
-respuesta: input()
-
 
 def download():
     usuarios = downloader.processCSV()
@@ -38,7 +33,10 @@ def update():
         print("Ninguna opcion coincide")
 
 
-if respuesta == "si" or respuesta == "SI":
+
+#print("Descargar repositorios (si|no): ")
+respuesta= input("Descargar repositorios (si|no): ")
+if respuesta.lower() == 'si'  or respuesta == 'SI':
     print("Semestre Actual (ejemplo: 2017-2):")
     semestreActual = input()
     print("linea en el archivo csv para el semestre(de acuerdo al CSV descargado): ")

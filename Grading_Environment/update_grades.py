@@ -29,10 +29,18 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEETS_ID_LIST = {
     "ED1": {
         "33": "1Z_lGfpMaShIm1aJ4EVmeyHUOjiDNcqBwwRXvEFhrx9U",  # Cambiar
+        "32": "",
+        "01": "",
         "02": "1GEv_Ke5DpgN_GAIV8VFkX73NyCuvjxaqLQUpwkL0-Cw",   # Cambiar
-        "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA",   # Cambiar
+        "03": "1dgEK5Of6D_tQgzQ8h3Ygjvq3zRB173VZMeDVSoNN0RA"   # Cambiar
     },
-    "ED2": {}  # No hay otro grupo por el momento
+    "ED2": {
+        "33": "",
+        "32": "",
+        "01": "",
+        "02": "",
+        "03": ""
+    }  
 }
 
 # Each array position represents the columnn range corresponding to each activity number
@@ -63,13 +71,11 @@ def main(argv):
 
     if course != "ED1" and course != "ED2":
         bad_usage()
-    elif group != "33" and group != "02" and group != "03":
-        bad_usage()
     elif p==True:
         if activity_number != "p01" or activity_number != "p02":
             bad_usage() 
     elif p==False:
-        if activity_number < 1 or activity_number > 12:
+        if activity_number < 1 or activity_number > 13:
             bad_usage()
 
     creds = None
@@ -81,27 +87,27 @@ def main(argv):
     sheet = service.spreadsheets()
     sheet_id = choose_sheet(course, group)
 
-    # Get the grades and pre-process it
-    if activity_number == "p01" or activity_number == "p02":
+    # Get the grades and pre-process it 
+    if activity_number == "p01" or activity_number == "p02":  #es proyecto?
         students = get_students_from_csv(
             course, group, "Proyecto/proyecto-1.csv")
     elif activity_number == 'l1':
-        students = get_students_from_csv(course, group, "Labs/lab1.csv")
+        students = get_students_from_csv(course, group, "Labs/lab1.csv")  #lab1?
     elif activity_number == 'l2':
-        students = get_students_from_csv(course, group, "Labs/lab2.csv")
+        students = get_students_from_csv(course, group, "Labs/lab2.csv") #lab2?
     elif activity_number == 'l3':
-        students = get_students_from_csv(course, group, "Labs/lab3.csv")
+        students = get_students_from_csv(course, group, "Labs/lab3.csv")   #lab3?
     elif activity_number == 'l4':
-        students = get_students_from_csv(course, group, "Labs/lab4.csv")
+        students = get_students_from_csv(course, group, "Labs/lab4.csv")   #lab5?
     elif activity_number == 'l5':
-        students = get_students_from_csv(course, group, "Labs/lab5.csv")
+        students = get_students_from_csv(course, group, "Labs/lab5.csv")   #lab6?
     else:
-        students = get_students_from_csv(course, group, "talleres.csv")
+        students = get_students_from_csv(course, group, "talleres.csv")   #talleres?
 
     if activity_number == 'l1' or activity_number ==  'l2' or activity_number ==  'l3' or activity_number ==  'l4' or activity_number ==  'l5':
-        labsupdate(students, sheet_id, activity_number, sheet)
+        labsupdate(students, sheet_id, activity_number, sheet) #actualiza las notas del lab en la hoja de calculo
     else:
-    
+        #actualiza para el proyecto o para los talleres
         grades = get_grades(students, activity_number)
         ids = get_ids_from_sheet(sheet, sheet_id, p, False, False, False, False, False, activity_number)
         sorted_grades = sort_grades(grades, ids)
@@ -120,8 +126,8 @@ def main(argv):
                                        valueInputOption="RAW", body=body).execute()
         print(f"{result.get('updatedCells')} cells updated")
 
-
-def labsupdate(students, sheet_id, activity_number, sheet):
+#los laboratorios actualizan mas de una celda, este metodo puede ser mas optimizado (lo hice rapido por la presion (; ))
+def labsupdate(students, sheet_id, activity_number, sheet): 
     """
     Gets each student's grade for the activity that you are evaluating.
     """
@@ -172,6 +178,7 @@ def labsupdate(students, sheet_id, activity_number, sheet):
         print(f"{result.get('updatedCells')} cells updated")
 
 
+#este metodo tambien puede ser mejorado, escoge cual es el rango de cada uno de los punto de cada lab
 def getlabs(i, activity_number):
     if i == 1 and activity_number == 1:
         return f"Laboratorio 1!{SPREADSHEET_RANGES_Labs[2]}"
